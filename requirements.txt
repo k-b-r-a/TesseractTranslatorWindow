@@ -1,0 +1,8 @@
+numpy	
+opencv-python
+pytesseract
+pywin32
+wxPython
+pynput
+Pillow
+deep-translator
