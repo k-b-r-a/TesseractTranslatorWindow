@@ -9,13 +9,16 @@ import numpy as np
 from pynput import keyboard
 from PIL import ImageGrab
 from deep_translator import GoogleTranslator
+from XInput import *
 
 config = configparser.ConfigParser()
 config.read('config.ini')
 language = config.get('Settings', 'language')
 target_language = config.get('Settings', 'target_language')
 key_t = config.get('Settings', 'key_t')
+Ckey_t = config.get('Settings', 'Ckey_t')
 key_h = config.get('Settings', 'key_h')
+Ckey_h = config.get('Settings', 'Ckey_h')
 pytesseract.pytesseract.tesseract_cmd = config.get('Settings', 'tesseract')
 custom_config = config.get('Settings', 't_config')
 
@@ -49,10 +52,11 @@ class MainFrame(wx.Frame):
     # ----------------------------------------------------------------------
     def __init__(self):
         """Constructor"""
-        wx.Frame.__init__(self, None, title="Main Frame", size=(
+        wx.Frame.__init__(self, None, title="Translator", size=(
             1200, 400), pos=(80, 200), style=wx.FRAME_EX_METAL)
         self.text = wx.StaticText(
             self, label=f'\nPress {key_t} for translate\nPress {key_h} for hide taskbar', pos=(10, 0))
+
         font = wx.Font(20, wx.FONTFAMILY_SWISS,
                        wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
         self.text.SetFont(font)
@@ -106,6 +110,43 @@ class MainFrame(wx.Frame):
                         pass
                 if key.char == key_h:
                     transform_w(frame)
+
+        class MyHandler(EventHandler):
+            def __init__(self, *controllers):
+                super().__init__(*controllers, filter=BUTTON_DPAD_UP+BUTTON_DPAD_DOWN+BUTTON_DPAD_LEFT+BUTTON_DPAD_RIGHT+BUTTON_START+BUTTON_BACK +
+                                 BUTTON_LEFT_THUMB+BUTTON_RIGHT_THUMB+BUTTON_LEFT_SHOULDER+BUTTON_RIGHT_SHOULDER+BUTTON_A+BUTTON_B+BUTTON_X+BUTTON_Y+FILTER_PRESSED_ONLY)
+
+            def process_button_event(self, event):
+
+                if event.button == Ckey_t:
+                    class key:
+                        char = key_t
+                    on_key(key)
+
+                elif event.button == Ckey_h:
+                    class key:
+                        char = key_h
+                    on_key(key)
+
+            def process_stick_event(self, event):
+                if event.stick == LEFT:
+                    pass
+
+            def process_trigger_event(self, event):
+                if event.trigger == LEFT:
+                    pass
+
+            def process_connection_event(self, event):
+                if event.type == EVENT_CONNECTED:
+                    pass
+                elif event.type == EVENT_DISCONNECTED:
+                    pass
+
+        # initialize handler object
+        handler = MyHandler(0)
+        # initialize controller thread
+        GamepadThread(handler)
+
         listener = keyboard.Listener(on_release=on_key)
         listener.start()
     # ----------------------------------------------------------------------

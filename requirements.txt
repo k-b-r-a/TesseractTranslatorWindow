@@ -6,3 +6,4 @@ wxPython
 pynput
 Pillow
 deep-translator
+XInput-Python
