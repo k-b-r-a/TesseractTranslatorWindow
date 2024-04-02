@@ -84,28 +84,32 @@ class MainFrame(wx.Frame):
                             screenshot_buffer.getvalue(), dtype=np.uint8)
                         Notranslucent(frame)
                         img = cv2.imdecode(screenshot_data, cv2.IMREAD_COLOR)
-                        if config.get('Post_processing', 'gray_thresh_sharpen') == 'True':
-                            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-                            sharpen_kernel = np.array(
-                                [[-1, -1, -1], [-1, 9, -1], [-1, -1, -1]])
-                            sharpen = cv2.filter2D(gray, -1, sharpen_kernel)
-                            thresh = cv2.threshold(
-                                sharpen, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
-                            post_Img = thresh
+                        img = cv2.medianBlur(img, 3)
+                        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                        sharpen_kernel = np.array(
+                            [[-1, -1, -1], [-1, 8.5, -1], [-1, -1, -1]])
+                        sharpen = cv2.filter2D(gray, -1, sharpen_kernel)
+                        thresh = cv2.threshold(
+                            sharpen, 0, 255, cv2.THRESH_OTSU)[1]
+                        threshg = cv2.threshold(
+                            gray, 0, 255, cv2.THRESH_OTSU)[1]
+                        kernel = np.ones((2, 2), np.uint8)
+                        closing = cv2.morphologyEx(
+                            thresh, cv2.MORPH_CLOSE, kernel)
+                        closingg = cv2.morphologyEx(
+                            threshg, cv2.MORPH_CLOSE, kernel)
+                        if config.get('Post_processing', 'gray_sharpen_thresh') == 'True':
+                            post_Img = closing
                         if config.get('Post_processing', 'gray_thresh') == 'True':
-                            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-                            thresh = cv2.threshold(
-                                gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
-                            post_Img = thresh
+                            post_Img = closingg
                         if config.get('Post_processing', 'gray') == 'True':
-                            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
                             post_Img = gray
                         text_o = pytesseract.image_to_string(
                             post_Img, config=custom_config, lang=language)
                         translated_text = GoogleTranslator(
                             source='auto', target=target_language).translate(text_o)
                         self.text.SetLabel(translated_text)
-                    except Exception as ex:
+                    except Exception:
                         self.text.SetLabel("Error")
                         pass
                 if key.char == key_h:
